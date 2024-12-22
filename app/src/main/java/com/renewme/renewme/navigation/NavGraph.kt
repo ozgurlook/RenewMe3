@@ -4,23 +4,55 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.renewme.renewme.ui.screens.AddictionScreen
+import com.renewme.renewme.ui.screens.InputScreen
+import com.renewme.renewme.ui.screens.SupportScreen
 import com.renewme.renewme.ui.screens.SplashScreen
 import com.renewme.renewme.ui.screens.OnboardingScreen
+import com.renewme.renewme.viewmodel.UserDataViewModel
+
 
 @Composable
-fun NavGraph(navController: NavHostController) {
-    // NavHost: Ekranlar arası geçişi yönetir
+fun NavGraph(
+    navController: NavHostController,
+    userDataViewModel: UserDataViewModel
+) {
     NavHost(
         navController = navController,
-        startDestination = "splash" // Uygulama açıldığında ilk olarak Splash ekranı gösterilecek
+        startDestination = "splash"
     ) {
-        // Splash Screen
         composable("splash") {
-            SplashScreen(navController) // Splash ekranını çağır
+            SplashScreen(navController)
         }
-        // Onboarding Screen
         composable("onboarding") {
-            OnboardingScreen(navController) // Onboarding ekranını çağır
+            OnboardingScreen(navController)
+        }
+        composable("support") {
+            SupportScreen(
+                viewModel = userDataViewModel,
+                onNext = { navController.navigate("addiction") }
+            )
+        }
+        composable("addiction") {
+            AddictionScreen { addiction ->
+                userDataViewModel.addiction = addiction
+                navController.navigate("input/age")
+            }
+        }
+        composable("input/{field}") { backStackEntry ->
+            val field = backStackEntry.arguments?.getString("field") ?: ""
+            InputScreen(
+                viewModel = userDataViewModel,
+                field = field,
+                onNext = {
+                    when (field) {
+                        "age" -> navController.navigate("input/weight")
+                        "weight" -> navController.navigate("input/height")
+                        "height" -> navController.navigate("done")
+                        else -> navController.popBackStack()
+                    }
+                }
+            )
         }
     }
 }
